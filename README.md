@@ -2,6 +2,12 @@
 
 A real, locally hosted student information system with a responsive university dashboard, full student CRUD operations, REST APIs, and a persistent SQLite database.
 
+## Student information at a glance
+
+The Northfield dashboard brings student registration, study-year enrollment, departmental totals, academic averages, recent admissions, and family contacts together in a single school-management view. Open any learner for a 360° student profile or download the currently filtered directory as a CSV file. Attendance, fee-ledger, and student-document modules are identified as upcoming and do not display fabricated records.
+
+Existing SQLite databases are upgraded on startup to include optional parent or guardian names, relationships, email addresses, phone numbers, and home addresses. Migration keeps existing student records and fills the new contact fields with blank values; add family contacts from a student's profile or the enrollment form.
+
 ## Requirements
 
 - [Node.js](https://nodejs.org/) 22.13 or newer. The application uses Node's built-in `node:sqlite` module; it has no external runtime dependencies.

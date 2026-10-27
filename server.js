@@ -38,22 +38,40 @@ database.exec(`
     status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'On leave', 'Graduated')),
     gpa REAL NOT NULL DEFAULT 0 CHECK (gpa BETWEEN 0 AND 4),
     phone TEXT NOT NULL DEFAULT '',
+    guardian_name TEXT NOT NULL DEFAULT '',
+    guardian_relationship TEXT NOT NULL DEFAULT '',
+    guardian_email TEXT NOT NULL DEFAULT '',
+    guardian_phone TEXT NOT NULL DEFAULT '',
+    address TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE INDEX IF NOT EXISTS idx_students_name ON students (last_name, first_name);
 `);
 
+const studentColumns = new Set(database.prepare("PRAGMA table_info(students)").all().map((column) => column.name));
+for (const [name, definition] of [
+  ["guardian_name", "TEXT NOT NULL DEFAULT ''"],
+  ["guardian_relationship", "TEXT NOT NULL DEFAULT ''"],
+  ["guardian_email", "TEXT NOT NULL DEFAULT ''"],
+  ["guardian_phone", "TEXT NOT NULL DEFAULT ''"],
+  ["address", "TEXT NOT NULL DEFAULT ''"],
+]) {
+  if (!studentColumns.has(name)) {
+    database.exec(`ALTER TABLE students ADD COLUMN ${name} ${definition}`);
+  }
+}
+
 if (database.prepare("SELECT COUNT(*) AS count FROM students").get().count === 0) {
   const seed = database.prepare(`
-    INSERT INTO students (student_id, first_name, last_name, email, department, program, year_of_study, status, gpa, phone)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO students (student_id, first_name, last_name, email, department, program, year_of_study, status, gpa, phone, guardian_name, guardian_relationship, guardian_email, guardian_phone, address)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   database.exec("BEGIN");
   try {
     for (const student of [
-      ["STU-2025-001", "Avery", "Morgan", "avery.morgan@example.edu", "Computer Science", "BSc Computer Science", 3, "Active", 3.84, "+1 (555) 010-2401"],
-      ["STU-2025-002", "Jordan", "Patel", "jordan.patel@example.edu", "Business", "BBA Business Administration", 2, "Active", 3.62, "+1 (555) 010-2402"],
+      ["STU-2025-001", "Avery", "Morgan", "avery.morgan@example.edu", "Computer Science", "BSc Computer Science", 3, "Active", 3.84, "+1 (555) 010-2401", "Alex Morgan", "Parent", "alex.morgan@example.edu", "+1 (555) 010-2400", ""],
+      ["STU-2025-002", "Jordan", "Patel", "jordan.patel@example.edu", "Business", "BBA Business Administration", 2, "Active", 3.62, "+1 (555) 010-2402", "Samira Patel", "Parent", "samira.patel@example.edu", "+1 (555) 010-2403", ""],
     ]) {
       seed.run(...student);
     }
@@ -67,8 +85,12 @@ if (database.prepare("SELECT COUNT(*) AS count FROM students").get().count === 0
 const filterStudentsQuery = database.prepare(`
   SELECT student_id AS studentId, first_name AS firstName, last_name AS lastName,
          email, department, program, year_of_study AS yearOfStudy, status, gpa, phone,
+         guardian_name AS guardianName, guardian_relationship AS guardianRelationship,
+         guardian_email AS guardianEmail, guardian_phone AS guardianPhone, address,
          created_at AS createdAt, updated_at AS updatedAt
   FROM students WHERE (? = '' OR status = ?)
+    AND (? = 0 OR year_of_study = ?)
+    AND (? = '' OR department = ?)
     AND (? = '' OR student_id LIKE ? ESCAPE '\\'
       OR first_name || ' ' || last_name LIKE ? ESCAPE '\\'
       OR email LIKE ? ESCAPE '\\' OR department LIKE ? ESCAPE '\\' OR program LIKE ? ESCAPE '\\')
@@ -77,19 +99,22 @@ const filterStudentsQuery = database.prepare(`
 const getStudentQuery = database.prepare(`
   SELECT student_id AS studentId, first_name AS firstName, last_name AS lastName,
          email, department, program, year_of_study AS yearOfStudy, status, gpa, phone,
+         guardian_name AS guardianName, guardian_relationship AS guardianRelationship,
+         guardian_email AS guardianEmail, guardian_phone AS guardianPhone, address,
          created_at AS createdAt, updated_at AS updatedAt
   FROM students WHERE student_id = ?
 `);
 const insertStudent = database.prepare(`
-  INSERT INTO students (student_id, first_name, last_name, email, department, program, year_of_study, status, gpa, phone)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO students (student_id, first_name, last_name, email, department, program, year_of_study, status, gpa, phone, guardian_name, guardian_relationship, guardian_email, guardian_phone, address)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const nextStudentNumber = database.prepare(`
   SELECT COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'students'), 0) + 1 AS nextId
 `);
 const updateStudent = database.prepare(`
   UPDATE students SET first_name = ?, last_name = ?, email = ?, department = ?, program = ?,
-    year_of_study = ?, status = ?, gpa = ?, phone = ?, updated_at = datetime('now')
+    year_of_study = ?, status = ?, gpa = ?, phone = ?, guardian_name = ?, guardian_relationship = ?,
+    guardian_email = ?, guardian_phone = ?, address = ?, updated_at = datetime('now')
   WHERE student_id = ?
 `);
 const deleteStudent = database.prepare("DELETE FROM students WHERE student_id = ?");
@@ -155,6 +180,11 @@ function validateStudent(input) {
   const department = typeof input.department === "string" ? input.department.trim() : "";
   const program = typeof input.program === "string" ? input.program.trim() : "";
   const phone = typeof input.phone === "string" ? input.phone.trim() : "";
+  const guardianName = typeof input.guardianName === "string" ? input.guardianName.trim() : "";
+  const guardianRelationship = typeof input.guardianRelationship === "string" ? input.guardianRelationship.trim() : "";
+  const guardianEmail = typeof input.guardianEmail === "string" ? input.guardianEmail.trim().toLowerCase() : "";
+  const guardianPhone = typeof input.guardianPhone === "string" ? input.guardianPhone.trim() : "";
+  const address = typeof input.address === "string" ? input.address.trim() : "";
   const yearOfStudy = Number(input.yearOfStudy);
   const gpa = Number(input.gpa);
 
@@ -167,9 +197,14 @@ function validateStudent(input) {
   if (!STATUSES.has(input.status)) return { error: "Select a valid enrollment status." };
   if (!Number.isFinite(gpa) || gpa < 0 || gpa > 4) return { error: "GPA must be between 0 and 4." };
   if (phone.length > 30) return { error: "Phone number must be 30 characters or fewer." };
+  if (guardianName.length > 100) return { error: "Parent or guardian name must be 100 characters or fewer." };
+  if (guardianRelationship.length > 30) return { error: "Relationship must be 30 characters or fewer." };
+  if (guardianEmail && (guardianEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guardianEmail))) return { error: "Enter a valid parent or guardian email address." };
+  if (guardianPhone.length > 30) return { error: "Parent or guardian phone number must be 30 characters or fewer." };
+  if (address.length > 200) return { error: "Address must be 200 characters or fewer." };
 
   return {
-    student: { firstName, lastName, email, department, program, yearOfStudy, status: input.status, gpa, phone },
+    student: { firstName, lastName, email, department, program, yearOfStudy, status: input.status, gpa, phone, guardianName, guardianRelationship, guardianEmail, guardianPhone, address },
   };
 }
 
@@ -195,14 +230,49 @@ function handleApi(request, response, url) {
     return;
   }
 
+  if (url.pathname === "/api/dashboard" && request.method === "GET") {
+    const stats = database.prepare(`
+      SELECT COUNT(*) AS total,
+        COALESCE(SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END), 0) AS active,
+        COALESCE(SUM(CASE WHEN status = 'On leave' THEN 1 ELSE 0 END), 0) AS onLeave,
+        COALESCE(SUM(CASE WHEN status = 'Graduated' THEN 1 ELSE 0 END), 0) AS graduated,
+        COALESCE(ROUND(AVG(gpa), 2), 0) AS averageGpa,
+        COALESCE(SUM(CASE WHEN created_at >= datetime('now', '-90 days') THEN 1 ELSE 0 END), 0) AS recentAdmissions
+      FROM students
+    `).get();
+    const academicYears = database.prepare(`
+      SELECT year_of_study AS yearOfStudy, COUNT(*) AS students,
+        ROUND(AVG(gpa), 2) AS averageGpa
+      FROM students GROUP BY year_of_study ORDER BY year_of_study
+    `).all();
+    const departments = database.prepare(`
+      SELECT department, COUNT(*) AS students
+      FROM students GROUP BY department ORDER BY students DESC, department COLLATE NOCASE LIMIT 5
+    `).all();
+    const recentRegistrations = database.prepare(`
+      SELECT student_id AS studentId, first_name AS firstName, last_name AS lastName,
+        department, program, year_of_study AS yearOfStudy, created_at AS createdAt
+      FROM students ORDER BY created_at DESC, id DESC LIMIT 4
+    `).all();
+
+    sendJson(response, 200, { stats, academicYears, departments, recentRegistrations });
+    return;
+  }
+
   if (url.pathname === "/api/students" && request.method === "GET") {
     const search = (url.searchParams.get("search") || "").trim().toLowerCase();
     const status = url.searchParams.get("status") || "";
+    const yearOfStudy = Number(url.searchParams.get("yearOfStudy")) || 0;
+    const department = url.searchParams.get("department") || "";
     const filter = status === "All statuses" ? "" : status;
     const searchTerm = search ? `%${search.replace(/[\\%_]/g, "\\$&")}%` : "";
     const students = filterStudentsQuery.all(
       filter,
       filter,
+      yearOfStudy,
+      yearOfStudy,
+      department,
+      department,
       searchTerm,
       searchTerm,
       searchTerm,
@@ -222,7 +292,7 @@ function handleApi(request, response, url) {
         return;
       }
       const studentId = `STU-${new Date().getFullYear()}-${String(nextStudentNumber.get().nextId).padStart(3, "0")}`;
-      insertStudent.run(studentId, student.firstName, student.lastName, student.email, student.department, student.program, student.yearOfStudy, student.status, student.gpa, student.phone);
+      insertStudent.run(studentId, student.firstName, student.lastName, student.email, student.department, student.program, student.yearOfStudy, student.status, student.gpa, student.phone, student.guardianName, student.guardianRelationship, student.guardianEmail, student.guardianPhone, student.address);
       sendJson(response, 201, { student: getStudentQuery.get(studentId) });
     }).catch((error) => {
       if (error.status) sendJson(response, error.status, { error: error.message });
@@ -252,7 +322,7 @@ function handleApi(request, response, url) {
         sendJson(response, 400, { error });
         return;
       }
-      const result = updateStudent.run(student.firstName, student.lastName, student.email, student.department, student.program, student.yearOfStudy, student.status, student.gpa, student.phone, studentId);
+      const result = updateStudent.run(student.firstName, student.lastName, student.email, student.department, student.program, student.yearOfStudy, student.status, student.gpa, student.phone, student.guardianName, student.guardianRelationship, student.guardianEmail, student.guardianPhone, student.address, studentId);
       if (Number(result.changes) === 0) {
         sendJson(response, 404, { error: "Student not found." });
         return;
