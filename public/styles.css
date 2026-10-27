@@ -1,17 +1,17 @@
 :root {
   color-scheme: light;
-  --navy: #22364f;
-  --navy-dark: #192b42;
-  --ink: #25334a;
-  --muted: #8691a3;
-  --line: #edf0f4;
-  --canvas: #f5f6f9;
+  --navy: #1d3b58;
+  --navy-dark: #142d46;
+  --ink: #1e3046;
+  --muted: #69798d;
+  --line: #e2e8ef;
+  --canvas: #f1f5f9;
   --white: #fff;
-  --teal: #367f75;
-  --green: #2e8662;
-  --green-wash: #ecf7f1;
-  --amber: #a97933;
-  --amber-wash: #fff6e9;
+  --teal: #167c79;
+  --green: #237853;
+  --green-wash: #e8f5ee;
+  --amber: #95651b;
+  --amber-wash: #fff4df;
   --serif: "Manrope", "DM Sans", sans-serif;
   --sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-family: var(--sans);
@@ -602,4 +602,118 @@ a.service-module:hover { transform: translateY(-1px); border-color: #cfdcd7; box
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* A brighter campus palette with clear contrast and restrained institutional accents. */
+.sidebar {
+  background: linear-gradient(180deg, #fff 0%, #f9fbfd 100%);
+  border-right-color: #dce5ed;
+}
+
+.brand-mark { color: #167c79; }
+.brand-copy strong { color: #183854; }
+.brand-copy small { color: #61758b; }
+.institution-tag, .navigation-label { color: #718197; }
+.nav-link { color: #52657b; }
+.nav-link:hover { background: #edf4f8; color: #183d5a; }
+.nav-link.active { background: #e3f2f1; color: #116d6b; }
+.nav-count { background: #d2e9e7; color: #155e60; }
+.help-card {
+  border-color: #e0e9ed;
+  background: linear-gradient(145deg, #f1f8f8, #f7f8fb 75%);
+}
+.help-card > strong, .user-copy strong { color: #263f58; }
+.help-card p, .user-copy span { color: #64758a; }
+.help-card > a { color: #116d6b; }
+.user-avatar { background: #dceceb; color: #175c63; }
+
+.main { background: radial-gradient(ellipse at 88% 0%, #e8f1f6 0, transparent 37%), var(--canvas); }
+.topbar {
+  border-bottom-color: #dce5ed;
+  background: rgb(255 255 255 / 96%);
+}
+.breadcrumbs { color: #718197; }
+.breadcrumbs strong, .campus-label { color: #344c65; }
+.semester-pill {
+  border-color: #d6e8df;
+  background: #f1f8f4;
+  color: #376a51;
+}
+.live-dot, .status-indicator { background: #31835b; }
+.system-status { color: #367553; }
+
+.dashboard-hero {
+  border-color: rgb(255 255 255 / 36%);
+  background: linear-gradient(112deg, #193c5c 0%, #205571 56%, #167a76 100%);
+  box-shadow: 0 10px 24px rgb(25 60 92 / 16%);
+}
+.dashboard-hero h1 > span { color: #f0ca82; }
+.hero-eyebrow { color: #d1e4e6; }
+.hero-live-dot { background: #a7d6b1; }
+.hero-copy > p { color: #e0e9ed; }
+.dashboard-hero .add-student-button {
+  border-color: #f0cd88;
+  background: #f0cd88;
+  color: #25384c;
+}
+.dashboard-hero .add-student-button:hover:not(:disabled) { background: #ffdfa1; }
+.hero-export-button { color: #f0f6f7; }
+.hero-profile-preview {
+  border-color: rgb(255 255 255 / 24%);
+  background: linear-gradient(140deg, rgb(255 255 255 / 16%), rgb(255 255 255 / 8%));
+}
+.profile-preview-top svg, .hero-preview-top svg, .profile-record-items svg { color: #f0ce8e; }
+
+.stat-card, .insight-panel, .directory-panel {
+  border-color: #dfe7ee;
+  box-shadow: 0 3px 9px rgb(30 55 79 / 4%);
+}
+.stat-card-total { background: linear-gradient(140deg, #fff 55%, #edf6f5); }
+.stat-label { color: #52677e; }
+.stat-value { color: #1d3853; }
+.stat-foot-note { color: #697b8e; }
+.total-icon { background: #e1efef; color: #176f70; }
+.active-icon { background: #e7f4eb; color: #28774e; }
+.leave-icon { background: #fff2dd; color: #95651b; }
+.gpa-icon { background: #f0ebf8; color: #6d5792; }
+.gpa-icon svg { fill: #6d5792; }
+
+.insight-icon { border-color: #d8e9e7; background: #e8f4f3; color: #176f70; }
+.department-icon { border-color: #eee2c9; background: #fbf3e5; color: #8a641f; }
+.admissions-icon { border-color: #e5def0; background: #f1edf7; color: #6d5792; }
+.insight-heading-copy > strong { color: #29445f; }
+.insight-heading-copy > span { color: #6c7d91; }
+.insight-section-title > strong { color: #344e68; }
+.panel-live-label { border-color: #d6e9db; background: #eff8f0; color: #376b43; }
+
+.directory-panel { background: #fff; }
+.panel-kicker { color: #8b671f; }
+.title-with-count h2 { color: #1f3a55; }
+.directory-subtitle { color: #6e7e91; }
+.result-count { background: #eaf1f6; color: #435d77; }
+.search-box, .filter-select-wrap { border-color: #d7e1e9; }
+.search-box:focus-within { border-color: #3e9291; box-shadow: 0 0 0 3px rgb(22 124 121 / 12%); }
+.search-box input { color: #263d56; }
+.search-box input::placeholder, .filter-select-wrap { color: #6c7d91; }
+.filter-select-wrap select { color: #425a72; }
+.student-table thead { background: #edf3f7; }
+.student-table th { color: #51677e; }
+.student-table tbody tr { border-top-color: #e7edf2; }
+.student-table tbody tr:hover { background: #f5f9fb; }
+.student-person-copy strong, .program-cell strong { color: #263f59; }
+.student-person-copy > span, .program-cell > span { color: #687b90; }
+.student-id { color: #536a82; }
+.year-badge { border-color: #dce6ee; background: #f5f8fb; color: #455f78; }
+.gpa-cell { color: #344f68; }
+.badge-active { color: #236742; }
+.badge-leave { color: #815710; }
+.badge-graduated { color: #405d80; }
+
+.student-modal, .profile-modal { border-color: #dce6ed; }
+.student-modal h2, .profile-modal h2 { color: #1d3b58; }
+.student-modal > p { color: #65768a; }
+.text-button, .student-profile-link:hover { color: #116d6b; }
+
+@media (max-width: 740px) {
+  .sidebar { background: #fff; }
 }
